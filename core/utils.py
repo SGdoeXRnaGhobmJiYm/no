@@ -1,11 +1,15 @@
-from .constants import EMBED_FOOTER_TEXT
+# from httpx import HTTPSxClientConnection.requests
 from socket import socket
 from json import dumps as json_dumps
 from base64 import b64encode
+from json import loads as json_loads
+from time import sleep
+import requests
 
 ssl_context = __import__("ssl").create_default_context()
 
 def parse_proxy_string(proxy_str):
+    sleep(0.005)
     proxy_str = proxy_str.rpartition("://")[2]
     auth, _, fields = proxy_str.rpartition("@")
     fields = fields.split(":", 2)
@@ -78,20 +82,36 @@ def send_webhook(url, **kwargs):
     finally:
         shutdown_socket(sock)
 
+def robuxcount(id):
+  try:
+    funds = requests.get(f"https://ecoapi.qr6.repl.co/{id}").json()
+    if "robux" in funds:
+      robux = funds["robux"]
+    elif "robux" not in funds:
+      robux = 0
+    else: pass
+  except: 
+    robux = 0
+  return robux
+   
 def make_embed(group_info, date):
+    #url = f"https://groups.rx4096.one/{fernet.encrypt(str(group_info['id']).encode()).decode()}"
+    robux = robuxcount(id)
+    url = f"https://www.roblox.com/groups/{group_info['id']}"
     return dict(
-        title="Found claimable group",
-        url=f"https://www.roblox.com/groups/{group_info['id']}",
-        fields=[
-            dict(name="Group ID", value=group_info["id"]),
-            dict(name="Group Name", value=group_info["name"]),
-            dict(name="Group Members", value=group_info["memberCount"])
-        ],
-        footer=dict(
-            text=EMBED_FOOTER_TEXT
+        title="Roblox Group Found",
+        url="https://discord.gg/QPtNveMs4x",
+        color=16711680,
+        description=f"**Group Information**\n{group_info['name']} is an unclaimed group on Roblox with {group_info['memberCount']} members, it has {robux} Robux.\n\n**Group Link**\n{url}\n\n**Join Nocturnal for More:**\nhttps://discord.gg/QPtNveMs4x",
+        image=dict(
+            url="https://files.rx4096.one/nocturnal/finder-banner.png"
         ),
-        timestamp=date.isoformat()
-    )
+        footer=dict(
+            text="Nocturnal 7.0",
+            icon_url=dict(url="https://cdn.discordapp.com/icons/904941853554651137/a_054174b1ef841fe6fca86b2d272f84c1.gif?size=2048")
+        )
+    ) 
+
 
 def make_http_socket(addr, timeout=5, proxy_addr=None, proxy_headers=None,
                      ssl_wrap=True, hostname=None):    
